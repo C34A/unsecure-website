@@ -1,0 +1,6 @@
+[submodule "deps/routez"]
+	path = deps/routez
+	url = https://github.com/Vexu/routez.git
+[submodule "deps/zig-sqlite"]
+	path = deps/zig-sqlite
+	url = https://github.com/vrischmann/zig-sqlite

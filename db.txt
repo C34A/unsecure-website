@@ -1,0 +1,6 @@
+CREATE TABLE messages(
+  sender varchar(255),
+  message varchar(4096),
+  id INTEGER PRIMARY KEY,
+  timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+);
