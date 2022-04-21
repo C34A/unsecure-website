@@ -42,9 +42,7 @@ fn indexHandler(req: routez.Request, res: routez.Response) !void {
 ///   }
 /// ]
 fn getMessages(req: routez.Request, res: routez.Response) !void {
-    _ = req;
-
-    try res.setType("application/json");
+    _ = req;// unused
     
     var db = try getDB();
 
@@ -82,6 +80,10 @@ fn getMessages(req: routez.Request, res: routez.Response) !void {
     
     // write data as json array into response body
     try std.json.stringify(arr.items, .{}, res.body);
+    // add newline to appease curl
+    try res.write("\r\n");
+    // set type AFTER writing because res.write sets the type to html >:(
+    try res.setType("application/json");
 }
 
 inline fn getDB() !sqlite.Db {
