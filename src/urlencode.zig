@@ -1,5 +1,6 @@
 const std = @import("std");
 
+///https://www.eso.org/~ndelmott/url_encode.html
 const table: [128]?u8 =
     [_]?u8{'\x00'} ++
     [_]?u8{null} ** 8 ++
@@ -104,13 +105,51 @@ const table: [128]?u8 =
         ' ',
     };
 
-pub fn to_ascii(encoded: *const [3]u8) !?u8 {
+/// Convert an ascii slice of % followed by two hex digits to the
+/// equivalent ascii from url encoding.
+pub fn to_ascii(encoded: []const u8) !?u8 {
+    if(encoded.len != 3) {
+        return URLEncodingError.BadInput;
+    }
     const idx = try std.fmt.parseInt(u8, encoded[1..3], 16);
     if (idx > 0 and idx < (comptime (&table).len)) {
         return table[idx];
     }
     return null;
 }
+
+pub const URLEncodingError = error {
+    IllegalCharacter,
+    BadInput,
+};
+
+/// like to_ascii but fail instead of null
+pub fn to_ascii_expect(encoded: []const u8) !u8 {
+    return (try to_ascii(encoded)) orelse URLEncodingError.IllegalCharacter;
+}
+
+pub fn decode_str(str: []const u8, alloc: std.mem.Allocator) !std.ArrayList(u8) {
+    var ret = std.ArrayList(u8).init(alloc);
+    
+    var i: usize = 0;
+    while (i < str.len) {
+        const c = str[i];
+        if (c == '%') {
+            if (i > str.len - 3) {
+                // error or whatever
+                return URLEncodingError.BadInput;
+            }
+            try ret.append(try to_ascii_expect(
+                str[i..i+3]
+            ));
+            i += 3;
+        } else {
+            try ret.append(c);
+            i += 1;
+        }
+    }
+    return ret;
+} 
 
 const expect = std.testing.expect;
 

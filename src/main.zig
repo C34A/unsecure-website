@@ -3,22 +3,22 @@ const Address = std.net.Address;
 const routez =  @import("routez");
 const sqlite = @import("sqlite");
 
+const urlenc = @import("urlencode.zig");
+
 const allocator = std.heap.page_allocator;
 
 const io_mode = .evented;
-
+asdf
 pub fn main() anyerror!void {
     var server = routez.Server.init(
         allocator,
         .{},
         .{
             routez.all("/", indexHandler),
+            routez.static("./public", "/public"),
             routez.all("/msgs", getMessages),
-            // get("/about", aboutHandler),
-            // get("/about/more", aboutHandler2),
-            // get("/post/{post_num}/?", postHandler),
-            // static("./", "/static"),
-            // all("/counter", counterHandler),
+            routez.get("/search/{query}", searchMessages),
+
         }
     );
     var addr = try Address.parseIp("127.0.0.1", 8000);
@@ -84,6 +84,18 @@ fn getMessages(req: routez.Request, res: routez.Response) !void {
     try res.write("\r\n");
     // set type AFTER writing because res.write sets the type to html >:(
     try res.setType("application/json");
+}
+
+fn searchMessages(req: routez.Request, res: routez.Response, args: *const struct{query: []const u8}) !void {
+    _ = req;
+    var arena = std.heap.ArenaAllocator.init(allocator);
+    defer arena.deinit();
+
+    const decoded = try urlenc.decode_str(args.query, arena.allocator());
+
+    var db = getDB();
+
+    try res.write(decoded.items);
 }
 
 inline fn getDB() !sqlite.Db {
