@@ -1,15 +1,10 @@
 "use strict";
 
-console.log("test2");
-
 (() => {
-    console.log("adding listener");
     window.addEventListener("load", init);
 
     function init() {
         hide(id("error"));
-
-        console.log("loaded");
 
         id("new-msg").addEventListener("click", (self, event) => {
             qsa(".submit-controls").forEach(it => {
@@ -18,13 +13,40 @@ console.log("test2");
             });
         });
 
-        loadMessages([
-            {
-                sender: "bilbo baggins",
-                timestamp: "2022-04-25",
-                message: "hello, world"
-            }
-        ]);
+        id("submit-msg").addEventListener("click", submitMessage); 
+
+        // loadMessages([
+        //     {
+        //         sender: "bilbo baggins",
+        //         timestamp: "2022-04-25",
+        //         message: "hello, world"
+        //     }
+        // ]);
+
+        getMessages();
+        id("message-input").value = "";
+    }
+
+    function submitMessage() {
+        const controls = qs(".submit-controls");
+        if (controls.classList.contains("hidden")) return;
+
+        const input_box = id("message-input");
+        console.log(input_box.value);
+
+        const text = input_box.value.trim()
+        const username = id("username-box").value.trim();
+
+        const query = `/post/?sender=${username}&message=${text}`;
+        fetch(query, {method: "POST"});
+    }
+
+    async function getMessages() {
+        let data = await fetch("/msgs");
+        // console.log(data);
+        let json = await data.json();
+        // console.log(json);
+        loadMessages(json);
     }
 
     /**
@@ -60,7 +82,7 @@ console.log("test2");
 
         const date = document.createElement("span");
         date.classList.add("message-date")
-        date.innerHTML = "      " + obj.timestamp;
+        date.innerHTML = "          " + obj.timestamp;
         base.appendChild(date);
 
         const textbox = document.createElement("p");
@@ -68,7 +90,6 @@ console.log("test2");
         base.appendChild(textbox);
 
 
-        console.log(base);
         return base;
     }
 
