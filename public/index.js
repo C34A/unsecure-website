@@ -1,6 +1,6 @@
 "use strict";
 
-(() => {
+// (() => {
     window.addEventListener("load", init);
 
     function init() {
@@ -24,7 +24,7 @@
 
     const toggleSubmitControls = (self, event) => {
         qsa(".submit-controls").forEach(it => {
-            console.log(it);
+            // console.log(it);
             toggle(it);
         });
     };
@@ -34,7 +34,7 @@
         if (controls.classList.contains("hidden")) return;
 
         const input_box = id("message-input");
-        console.log(input_box.value);
+        // console.log(input_box.value);
 
         const text = input_box.value.trim()
         const username = id("username-box").value.trim();
@@ -151,4 +151,4 @@
     function qsa(query) {
         return document.querySelectorAll(query);
     }
-})();
+// })();
