@@ -42,7 +42,8 @@
         const query = `/post/?sender=${username}&message=${text}`;
         fetch(query, {method: "POST"});
         input_box.value = "";
-        getMessages();
+
+        setTimeout(() => getMessages(), 0.1);
     }
 
     async function getMessages() {
