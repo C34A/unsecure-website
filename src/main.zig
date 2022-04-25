@@ -8,7 +8,7 @@ const urlenc = @import("urlencode.zig");
 const allocator = std.heap.page_allocator;
 
 const io_mode = .evented;
-asdf
+
 pub fn main() anyerror!void {
     var server = routez.Server.init(
         allocator,
@@ -21,7 +21,17 @@ pub fn main() anyerror!void {
 
         }
     );
-    var addr = try Address.parseIp("127.0.0.1", 8000);
+    // if environment variable PORT if it exists
+    const port = std.process.getEnvVarOwned(allocator, "PORT") catch null;
+
+    const port_num = if (port) |port_notnull|
+        std.fmt.parseInt(u16, port_notnull, 10) catch brk: {
+            std.log.warn("failed to parse port '{s}', using 8000\n", .{port_notnull});
+            break :brk 8000;
+        }
+    else 8000;
+
+    var addr = try Address.parseIp("127.0.0.1", port_num);
     try server.listen(addr);
 }
 
@@ -29,6 +39,14 @@ fn indexHandler(req: routez.Request, res: routez.Response) !void {
     _ = req;
     try res.sendFile("public/index.html");
 }
+
+// This is what we hope to get from the db. i think sqlite-zig panics
+// if the data doesn't match this type.
+const MsgItem = struct {
+    sender: []const u8,
+    message: []const u8,
+    timestamp: []const u8 // datetime
+};
 
 /// Get all of the messages. example response:
 /// [
@@ -48,7 +66,7 @@ fn getMessages(req: routez.Request, res: routez.Response) !void {
 
     // build DB command with query
     const query =
-        \\SELECT sender, message, timestamp from Messages
+        \\SELECT sender, message, timestamp from Messages order by timestamp desc
     ;
     var diags = sqlite.Diagnostics{}; // magic beans
     var stmt = db.prepareWithDiags(query, .{.diags = &diags}) catch |err| {
@@ -57,13 +75,6 @@ fn getMessages(req: routez.Request, res: routez.Response) !void {
     };
     defer stmt.deinit();
 
-    // This is what we hope to get from the db. i think sqlite-zig panics
-    // if the data doesn't match this type.
-    const MsgItem = struct {
-        sender: []const u8,
-        message: []const u8,
-        timestamp: []const u8 // datetime
-    };
     var iter = try stmt.iterator(MsgItem, .{});
 
     // arena to manage the iterator's allocations
@@ -93,9 +104,33 @@ fn searchMessages(req: routez.Request, res: routez.Response, args: *const struct
 
     const decoded = try urlenc.decode_str(args.query, arena.allocator());
 
-    var db = getDB();
+    var db = try getDB();
 
-    try res.write(decoded.items);
+    // build query (UNSAFE!!)
+    const query = try std.fmt.allocPrint(arena.allocator(), 
+      \\ select sender, message, timestamp from Messages where message like '%{s}%' order by timestamp desc;
+      , .{decoded.items});
+
+    // std.debug.print("searching with query '{s}'\n", .{query});
+    var diags = sqlite.Diagnostics{}; // magic beans
+    var stmt = db.prepareDynamicWithDiags(query, .{.diags = &diags}) catch |err| {
+        std.log.err("unable to prepare statement, got error {s}. diagnostics: {s}", .{err, diags});
+        return err;
+    };
+    defer stmt.deinit();
+
+    var iter = try stmt.iterator(MsgItem, .{});
+
+    var arr = std.ArrayList(MsgItem).init(arena.allocator());
+    while(true) {
+        const obj = (try iter.nextAlloc(arena.allocator(), .{})) orelse break;
+        try arr.append(obj);
+    }
+
+    // this is all the same as getMsgs
+    try std.json.stringify(arr.items, .{}, res.body);
+    try res.write("\r\n");
+    try res.setType("application/json");
 }
 
 inline fn getDB() !sqlite.Db {
