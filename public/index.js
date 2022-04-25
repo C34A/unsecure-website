@@ -6,12 +6,7 @@
     function init() {
         hide(id("error"));
 
-        id("new-msg").addEventListener("click", (self, event) => {
-            qsa(".submit-controls").forEach(it => {
-                console.log(it);
-                toggle(it);
-            });
-        });
+        id("new-msg").addEventListener("click", toggleSubmitControls);
 
         id("submit-msg").addEventListener("click", submitMessage); 
 
@@ -27,6 +22,13 @@
         id("message-input").value = "";
     }
 
+    const toggleSubmitControls = (self, event) => {
+        qsa(".submit-controls").forEach(it => {
+            console.log(it);
+            toggle(it);
+        });
+    };
+
     function submitMessage() {
         const controls = qs(".submit-controls");
         if (controls.classList.contains("hidden")) return;
@@ -39,6 +41,8 @@
 
         const query = `/post/?sender=${username}&message=${text}`;
         fetch(query, {method: "POST"});
+        input_box.value = "";
+        getMessages();
     }
 
     async function getMessages() {
