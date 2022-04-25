@@ -151,9 +151,43 @@ pub fn decode_str(str: []const u8, alloc: std.mem.Allocator) !std.ArrayList(u8) 
     return ret;
 } 
 
+/// Parse query parameters of format "key=value;key2=value2&key3=value3"...
+/// returned map as well as keys and values are allocated with given allocator.
+pub fn parse_query(allocator: std.mem.Allocator, query: []const u8) !std.StringHashMap([]const u8) {
+    std.debug.print("query: {s}\n", .{query});
+    var map = std.StringHashMap([]const u8).init(allocator);
+
+    var start: usize = 0;
+    var end: usize = 0;
+    while (true) {
+        if (query[end] == '=') {
+            const key_name_slice = query[start..end];
+            end += 1;
+            start = end;
+            // find end
+            while (end < query.len and query[end] != ';' and query[end] != '&') {end += 1;}
+            const value_slice = query[start..end];
+            start = end + 1;
+            end = start;
+
+            std.debug.print("{{\n  k: '{s}'\n  v: '{s}'\n}}\n", .{key_name_slice, value_slice});
+
+            var key = try decode_str(key_name_slice, allocator);
+            var value = try decode_str(value_slice, allocator);
+            try map.putNoClobber(key.toOwnedSlice(), value.toOwnedSlice());
+        } else {
+            end += 1;
+        }
+        if (end >= query.len) {
+            break;
+        }
+    }
+    return map;
+}
+
 const expect = std.testing.expect;
 
-test "blah" {
+test "table alignment" {
     try expect(table[0].? == '\x00');
     try expect(table[0x11] == null);
     try expect(table[0x2b].? == '+');

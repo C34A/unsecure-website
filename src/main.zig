@@ -18,7 +18,7 @@ pub fn main() anyerror!void {
             routez.static("./public", "/public"),
             routez.all("/msgs", getMessages),
             routez.get("/search/{query}", searchMessages),
-
+            routez.post("/post/?", postMessage),
         }
     );
     // if environment variable PORT if it exists
@@ -129,6 +129,41 @@ fn searchMessages(req: routez.Request, res: routez.Response, args: *const struct
 
     // this is all the same as getMsgs
     try std.json.stringify(arr.items, .{}, res.body);
+    try res.write("\r\n");
+    try res.setType("application/json");
+}
+
+const PostMessageErr = error {
+    InvalidQuery,
+};
+
+fn postMessage(req: routez.Request, res: routez.Response) !void {
+    std.debug.print("req: {}\n", .{req});
+    var arena = std.heap.ArenaAllocator.init(allocator);
+    defer arena.deinit();
+    const params = try urlenc.parse_query(arena.allocator(), req.query);
+
+    const sender = params.get("sender") orelse return PostMessageErr.InvalidQuery;
+    const message = params.get("message") orelse return PostMessageErr.InvalidQuery;
+
+    var db = try getDB();
+
+    // build query (UNSAFE!!)
+    const query = try std.fmt.allocPrint(arena.allocator(), 
+      \\ insert into Messages (sender, message) values ('{s}', '{s}');
+      , .{sender, message});
+
+    // std.debug.print("searching with query '{s}'\n", .{query});
+    var diags = sqlite.Diagnostics{}; // magic beans
+    var stmt = db.prepareDynamicWithDiags(query, .{.diags = &diags}) catch |err| {
+        std.log.err("unable to prepare statement, got error {s}. diagnostics: {s}", .{err, diags});
+        return err;
+    };
+    defer stmt.deinit();
+
+    try stmt.exec(.{}, .{});
+    
+    try res.print("sender: {s}\nmessage: {s}\n", .{sender, message});
     try res.write("\r\n");
     try res.setType("application/json");
 }

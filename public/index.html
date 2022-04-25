@@ -2,10 +2,45 @@
 <html>
     <head>
         <title>test page</title>
+        <link rel="stylesheet" href="/public/styles.css">
+        <script src="public/index.js"></script> 
     </head>
     <body>
-        <p>
-            test
-        </p>
+        <header>
+            <h1>
+                MsgBoard
+            </h1>
+            <form>
+                <div>
+                    <label for="username-box">Username: </label>
+                    <input id="username-box" type="email">
+                </div>
+                <div>
+                    <label for="pw">Password: </label>
+                    <input type="password" id="pw">
+                </div>
+            </form>
+            <p id="error">
+                This page requires javascript!
+            </p>
+        </header>
+        <section id="submit">
+            <button id="new-msg">New Message</button>
+            <button id="submit-msg" class="hidden submit-controls">Submit Message</button>
+            <div class="hidden submit-controls">
+                <div>
+                    <label for="message-input">Message: </label>
+                    <br>
+                    <textarea id="message-input"></textarea>
+                </div>
+            </div>
+        </section>
+        <section id="container">
+            <!-- <div class="message">
+                <span class="message-username">test</span>
+                <span class="message-date">date</span>
+                <p>content goes here!</p>
+            </div> -->
+        </section>
     </body>
 </html>

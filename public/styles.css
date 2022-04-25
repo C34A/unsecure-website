@@ -1,0 +1,89 @@
+
+header {
+    width: min-content;
+    max-width: 100%;
+    min-width: 60%;
+    margin-left: auto;
+    margin-right: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+header > * {
+    padding-left: 1%;
+    padding-right: 1%;
+    background-color: aliceblue;
+    border: 2px solid cadetblue;
+    border-radius: 10px;
+    height: 100%;
+    margin: 1%;
+}
+
+header div {
+    margin: 3px;
+}
+
+#error {
+    font-size: large;
+    color: red;
+}
+
+.hidden {
+    display: none !important;
+}
+
+#submit {
+    margin-left: auto;
+    margin-right: auto;
+    background-color: aliceblue;
+    border: 4px solid darkcyan;
+    border-radius: 5px;
+    width: 50%;
+    padding: 10px;
+}
+
+#container {
+    margin-left: auto;
+    margin-right: auto;
+    width: 60%;
+    background-color: azure;
+    border: 2px solid cadetblue;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    margin-top: 3vh;
+}
+
+.message {
+    width: 90%;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 15px;
+    margin-bottom: 15px;
+    padding: 15px;
+    background-color: rgb(205, 229, 229);
+    border: 2px solid cadetblue;
+    border-radius: 10px;
+
+}
+
+.message-username {
+    font-size: 18pt;
+    font-weight: bold;
+}
+
+.message-date {
+    font-size: 13pt;
+}
+
+.message p {
+    margin-top: 5px;
+    margin-bottom: 5px;
+    padding: 10px;
+    background-color: rgb(227, 239, 239);
+    border: 2px solid cadetblue;
+    border-radius: 10px;
+}
